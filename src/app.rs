@@ -2,7 +2,6 @@
 //! runtime-independent and runtime-specific functionality.
 
 use crate::{Channel, Receiver, Result, Runtime, Sender};
-use futures::FutureExt;
 
 #[derive(Clone)]
 pub struct App<R: Runtime> {
@@ -114,6 +113,9 @@ impl AppDriver<crate::Tokio> {
         }
     }
 }
+
+#[cfg(feature = "with-async-std")]
+use futures::FutureExt;
 
 #[cfg(feature = "with-async-std")]
 impl AppDriver<crate::AsyncStd> {
