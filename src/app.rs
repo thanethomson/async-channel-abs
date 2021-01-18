@@ -6,7 +6,6 @@ use crate::{Channel, Receiver, Result, Runtime, Sender};
 #[derive(Clone)]
 pub struct App<R: Runtime> {
     cmd_tx: <<R as Runtime>::Channel as Channel>::Sender<Request<R>>,
-    _runtime: std::marker::PhantomData<R>,
 }
 
 impl<R: Runtime> App<R> {
@@ -14,15 +13,8 @@ impl<R: Runtime> App<R> {
     pub fn new<S: AsRef<str>>(state: S) -> (Self, AppDriver<R>) {
         let (cmd_tx, cmd_rx) = R::Channel::unbounded();
         (
-            Self {
-                cmd_tx,
-                _runtime: Default::default(),
-            },
-            AppDriver {
-                state: state.as_ref().to_owned(),
-                cmd_rx,
-                _runtime: Default::default(),
-            },
+            Self { cmd_tx },
+            AppDriver::new(state.as_ref().to_owned(), cmd_rx),
         )
     }
 
@@ -54,7 +46,6 @@ impl<R: Runtime> App<R> {
 pub struct AppDriver<R: Runtime> {
     state: String,
     cmd_rx: <<R as Runtime>::Channel as Channel>::Receiver<Request<R>>,
-    _runtime: std::marker::PhantomData<R>,
 }
 
 // Runtime-independent code.
@@ -63,11 +54,7 @@ impl<R: Runtime> AppDriver<R> {
         state: String,
         cmd_rx: <<R as Runtime>::Channel as Channel>::Receiver<Request<R>>,
     ) -> AppDriver<R> {
-        Self {
-            state,
-            cmd_rx,
-            _runtime: Default::default(),
-        }
+        Self { state, cmd_rx }
     }
 
     async fn handle_request(&mut self, request: Request<R>) -> Result<()> {
